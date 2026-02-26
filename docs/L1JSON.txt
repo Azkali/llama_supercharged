@@ -52,3 +52,7 @@ For other back ends, such as `llamaLLM`, a given L1JSON structure is likely to l
 4. Colour-coding.
 In diagrams, L1JSON takes on the red colour (redJSON).
 No exceptions.
+
+5. L1JSON is not a controller.
+L1JSON does *not* have the ability to trigger generations or to act upon its own configuration; L1JSON is a low-level control structure.
+Please look for the MEMCON structure for model and memory control.
