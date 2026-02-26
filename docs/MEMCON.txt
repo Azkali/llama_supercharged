@@ -1,0 +1,94 @@
+# MEMCON/blueJSON structure (standard).
+
+1. MEMCON is composed of three sections:
+- slot:		model slot to actionate on.
+- memory:	memory routines to be executed.
+- trigger:	trigger routines to be executed.
+
+2. Each section is ordered by the order in which they'll run:
+- slot:		selector; no real execution. "goes first".
+- memory:	used to manage memory (obviously).
+- trigger:	used to trigger a configured model to execute.
+
+The following is an example of the standard:
+```
+{
+  "slot": 0,
+  "memory": {
+    "routines": [
+      {"i": "reserve", "a": 4509715660},
+      {"i": "load"}
+    ]
+  },
+  "trigger": {
+    "routines": [
+      {"i": "init_full"},
+      {"i": "execute"}
+    ]
+  }
+}
+```
+
+3. MEMCON is static.
+Unlike L1JSON, a given MEMCON structure has *no additional parameters*, as it is just a controller.
+Given this, the following is a list of supported values for each of the three keys:
+- slot:
+  - A number:		The slot number. 0-index.
+- memory:
+  - "load":		Loads the slot's configuration. A kind of trigger.
+  - "unload":		Above, but negated.
+  - "wipe":		Completely resets a slot.
+  - "mcheck":		Looks into the slot's L1JSON structure and returns the approximate number of bytes needed to initiate the slot.
+  - "reserve":		Reserves a specified amount of execution memory. Usually paired with "mcheck".
+  - "deserve":		Above, but negated, and with no argument.
+- trigger:
+  - "init_full":	Fully initializes a slot. Undefined behaviour if executed twice.
+  - "init_half":	Partially reinitializes a slot. Behaviour depends on back end.
+  - "execute":		Triggers a slot execution. Returns its output and stores a copy in the slot's "bit bucket".
+  - "crash":		Crashes the slot. This is here for fun, but you can use it to test your program's error handling.
+
+4. Return structure.
+MEMCON returns to sender a message containing information about its assigned task.
+The structure of this return message matches its input, making it easy to parse and meld the results of MEMCON's actions.
+For convenience, the slot number is kept in the response. This is useful if you're running more than you realistically should at once.
+The following is a list of return values for each key:
+- memory:
+  - "load":		0	(OK); "<err>"	(FAIL).
+  - "unload":		0	(OK); "<err>"	(FAIL).
+  - "wipe":		0	(OK); "<err>"	(FAIL).
+  - "mcheck":		<value>	(OK); -1	(FAIL).
+  - "reserve":		<input>	(OK); -1	(FAIL); <lt input; gt -1>	(RECOVER).
+  - "deserve":		0	(OK); -1	(FAIL).
+- trigger:
+  - "init_full":	0	(OK); "<err>"	(FAIL).
+  - "init_half":	0	(OK); "<err>"	(FAIL).
+  - "execute":		<data>	(OK); "<err>"	(FAIL); "<err>" + data		(RECOVER).
+  - "crash":		<gt 0>	(OK).
+It is worth noting that, because MEMCON acts as a pipeline, whatever can't be executed due to previous errors always returns -2.
+
+The following is an example of the response given by the standard example:
+```
+{
+  "slot": 0,
+  "memory": {
+    "routines": [
+      {"i": "reserve", "r": 4509715660},
+      {"i": "load", "r": 0}
+    ]
+  },
+  "trigger": {
+    "routines": [
+      {"i": "init_full", "r": "generic error."},
+      {"i": "execute", "r": -2}
+    ]
+  }
+}
+```
+
+4. Colour-coding.
+In diagrams, MEMCON takes on the blue colour (blueJSON).
+No exceptions.
+
+5. MEMCON is a controller.
+MEMCON does *not* have the ability to configure without a configuration strcture to act upon; MEMCON is a low-level control executor.
+Please look for the L1JSON structure for model and data configuration.
