@@ -1,0 +1,68 @@
+INTERNALS.
+this file is a conglomerate of information with the intent of aiding developers in understanding the mechanisms behind supercharger.
+
+TASKLIST:
+	do slotter.			O
+	do memcon.			O ?
+	defer model loading.		X
+	handle multiple JSON files	X
+
+DATA FLOW:
+	L1JSON/redJSON		→		slot.
+	MEMCON			→		<nothing>	←	MEMCON runs directly. inherits slot to do so.
+
+
+				STRUCTURE			STRUCTURE
+				##################		###################
+				# L1JSON/redJSON #		# MEMCON/blueJSON #----------------------#
+				##################		###################			 |
+						|							 |
+						#--------------------------------------#		 |
+										       |		 |
+						#----------------------------------#   |		 |
+						|				   |   |		 |
+				SYSTEM		V		SYSTEM		   |   |		 V
+				##################		###################=###=###################
+	[IS BACK END] --------> # L1JSON/redJSON #<-------------# MEMCON/blueJSON  |   |		  #
+				##################		#		   |   #------->###########
+								#		   #------------# Slotter #
+								###########################################
+
+EXAMPLE WORKFLOW:
+1. slot creation.	blueJSON	→ MEMCON (EMPTY CALL)
+					MEMCON unpacks data.
+					MEMCON recognizes blueJSON signature.
+					MEMCON creates a new slot.
+2. model definition.	redJSON		→ MEMCON (SLOTNUM CALL)				←					OR	→ MEMCON.slot (RAW ASSIGN)
+					MEMCON unpacks data.				←						...
+					MEMCON does not recognize signature.	OR	MEMCON recognizes SLOTNUM parameter.		...
+					MEMCON stores the data in the slot.		←						...
+3. model preparation.	blueJSON	→ MEMCON (EMPTY CALL)
+					MEMCON unpacks data.
+					MEMCON recognizes blueJSON signature.
+					MEMCON validates model type against fixed list.
+					MEMCON creates an object in the requested slot.
+			blueJSON	→ MEMCON (EMPTY CALL)
+					MEMCON unpacks data.
+					MEMCON recognizes blueJSON signature.
+					MEMCON validates instruction against fixed list.
+					MEMCON calls the instruction on the slot's model (LOAD).
+			blueJSON	→ MEMCON (EMPTY CALL)
+					MEMCON unpacks data.
+					MEMCON recognizes blueJSON signature.
+					MEMCON validates instruction against fixed list.
+					MEMCON calls the instruction on the slot's model (INIT_HALF).
+4. model execution.	blueJSON	→ MEMCON (EMPTY CALL)
+					MEMCON unpacks data.
+					MEMCON recognizes blueJSON signature.
+					MEMCON validates instruction against fixed list.
+					MEMCON calls the instruction on the slot's model (EXECUTE).
+5. model definition.	redJSON		→ MEMCON (SLOTNUM CALL)				←					OR	→ MEMCON.slot (RAW ASSIGN)
+					MEMCON unpacks data.				←						...
+					MEMCON does not recognize signature.	OR	MEMCON recognizes SLOTNUM parameter.		...
+					MEMCON stores the data in the slot.		←						...
+6. model half-prep.	blueJSON	→ MEMCON (EMPTY CALL)
+					MEMCON unpacks data.
+					MEMCON recognizes blueJSON signature.
+					MEMCON validates instruction against fixed list.
+					MEMCON calls the instruction on the slot's model (INIT_HALF).
