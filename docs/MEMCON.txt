@@ -34,18 +34,31 @@ Unlike L1JSON, a given MEMCON structure has *no additional parameters*, as it is
 Given this, the following is a list of supported values for each of the three keys:
 - slot:
   - A number:		The slot number. 0-index.
+  - SLACT:		A SLACT object. Explained in section 3.1.
 - memory:
   - "load":		Loads the slot's configuration. A kind of trigger.
   - "unload":		Above, but negated.
-  - "wipe":		Completely resets a slot.
-  - "mcheck":		Looks into the slot's L1JSON structure and returns the approximate number of bytes needed to initiate the slot.
+  - "create":		Creates a slot.
+  - "remove":		Removes a slot. Remember to unload beforehand!
+  - "mcheck":		Looks into the slot's L1JSON structure and returns the approximate number of bytes needed to initiate (not initialize) the slot.
   - "reserve":		Reserves a specified amount of execution memory. Usually paired with "mcheck".
-  - "deserve":		Above, but negated, and with no argument.
+  - "free":		Above, but negated, and with no argument.
 - trigger:
   - "init_full":	Fully initializes a slot. Undefined behaviour if executed twice.
   - "init_half":	Partially reinitializes a slot. Behaviour depends on back end.
   - "execute":		Triggers a slot execution. Returns its output and stores a copy in the slot's "bit bucket".
   - "crash":		Crashes the slot. This is here for fun, but you can use it to test your program's error handling.
+
+3.1 SLACT structure.
+SLACT is the name given to a structure that can be passed to the slot key in place of a number. SLACTs are to be used to initialize and manage slots.
+SLACTs are commonly sent to supercharger at the very start and the very end of complex pipelines.
+The following is a list of SLACT's keys and their supported values:
+- slot:
+  - A number:		The slot number. 0-index.
+- action:
+  - "create":		Creates the slot.
+  - "remove":		Removes the slot.
+Very simple. Like an anteater.
 
 4. Return structure.
 MEMCON returns to sender a message containing information about its assigned task.
@@ -85,10 +98,19 @@ The following is an example of the response given by the standard example:
 }
 ```
 
-4. Colour-coding.
+4.1 SLACT return structure.
+SLACT's return structure is as simple as its input. Like an anteater.
+The following is a list of return values for each key:
+- action:
+  - "create":		<value>	(OK); -1	(FAIL).
+  - "remove":		0	(OK); -1	(FAIL).
+Slots are simple enough that any failure can simply be treated as a slot either already existing or missing, respectively.
+...Unless you passed invalid data to the slot key. Please make sure it's a number.
+
+5. Colour-coding.
 In diagrams, MEMCON takes on the blue colour (blueJSON).
 No exceptions.
 
-5. MEMCON is a controller.
+6. MEMCON is a controller.
 MEMCON does *not* have the ability to configure without a configuration strcture to act upon; MEMCON is a low-level control executor.
 Please look for the L1JSON structure for model and data configuration.
