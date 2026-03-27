@@ -1,5 +1,8 @@
 from supercharger.backends import *
 import inspect
+import logging
+
+logger = logging.getLogger("lib.smodel")
 
 def single_model(model: str, json_file: str, messages: list = []):
     backend_class = globals().get(model)
@@ -18,5 +21,5 @@ def single_model(model: str, json_file: str, messages: list = []):
         if not messages
         else backend_class(json_file=json_file, messages=messages)
     )
-    print(f"Using backend: {backend_class.__name__}")
+    logger.info(f"using \"{backend_class.__name__}\" back end.")
     backend()

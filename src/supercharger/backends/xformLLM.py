@@ -2,6 +2,7 @@ from supercharger.llm import LLM
 from transformers import AutoModelForCausalLM, AutoModelForMultimodalLM, AutoProcessor, AutoConfig, TextIteratorStreamer
 from threading import Thread
 from typing import override
+import logging
 
 # L1JSON/redJSON -> xformLLM inflation:
 #  params
@@ -12,13 +13,16 @@ from typing import override
 #   .processor   -> processor/tokenizer       data process parameters.
 #  data          -> model                     generation messages.
 
+logger = logging.getLogger("lib.xformLLM")
+
 class xformLLM(LLM):
     def __init__(self, json_file: str):
+        logger.info("initializing instance...")
         super().__init__(json_file)
-        self._load_data()
-        mtype = self._load_model()
+        self._load_data()                                                           ; logger.debug("parsed L1JSON succesfully.")
+        mtype = self._load_model()                                                  ; logger.debug(f"loaded model ({mtype} type).")
 
-        self.processor = AutoProcessor.from_pretrained(**self.params_processor)
+        self.processor = AutoProcessor.from_pretrained(**self.params_processor)     ; logger.debug("set up processor.")
         self.tokenizer = self.processor.tokenizer if mtype != "CAUSAL" else self.processor._tokenizer
 
     @override
@@ -43,10 +47,15 @@ class xformLLM(LLM):
         )
         thread.start()
 
+        logger.info("output ahead!")
+        logger.info("%TRLog%_wild_output_begin")
         output = []
         for token in self.streamer:
             output.append(token)
             print(token, end="", flush=True)
+        print()
+        logger.info("%TRLog%_wild_output_end")
+        logger.info("end of output.")
 
         return output
 
@@ -67,6 +76,7 @@ class xformLLM(LLM):
         """
 
         if hasattr(config, "vision_config"):
+            logger.debug("model has vision_config attribute.")
             self.model = AutoModelForMultimodalLM.from_pretrained(**self.params_model)#, **qconf)
             return "MMODAL"
 
