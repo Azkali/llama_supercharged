@@ -1,0 +1,6 @@
+When using the library, you are free to import whatever structures you wish!
+Because this is Python, there is no sense of security, so feel free to do so.
+
+I just warn that you may break everything in spectacular ways.
+
+Beware of internal slot IDs!
